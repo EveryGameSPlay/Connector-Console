@@ -1,14 +1,15 @@
 ﻿using System;
+using Connector.Input;
 
-namespace Connector.Input
+
+namespace Connector.ConsoleRealizarions.Input
 {
-    public static class InputHandler
+    public class ConsoleInputHandler : IInputHandler
     {
         /// <summary>
         /// Получаем введенную строку из консоли
         /// </summary>
-        /// <returns></returns>
-        public static string GetInputLine()
+        public string GetInputLine()
         {
             return Console.ReadLine();
         }

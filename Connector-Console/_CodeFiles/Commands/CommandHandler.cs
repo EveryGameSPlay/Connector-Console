@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using System.Linq;
 
 using Connector.Printer;
-using Connector.Printer.Displays;
 
 namespace Connector.Commands
 {
