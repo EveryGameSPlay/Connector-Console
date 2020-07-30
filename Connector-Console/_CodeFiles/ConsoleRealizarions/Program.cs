@@ -16,12 +16,9 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Commands.CommandsRealization;
-<<<<<<< Updated upstream:Connector-Console/_CodeFiles/ConsoleRealizarions/Program.cs
 using Connector.ConsoleRealizarions.Displays;
-=======
 using Connector.Input;
 using Connector.Loops;
->>>>>>> Stashed changes:Connector-Console/_CodeFiles/Program.cs
 
 namespace Connector
 {

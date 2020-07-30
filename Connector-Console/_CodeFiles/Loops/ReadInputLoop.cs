@@ -2,6 +2,7 @@
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+using Connector.ConsoleRealizarions.Input;
 using Connector.Input;
 
 namespace Connector.Loops
@@ -11,11 +12,15 @@ namespace Connector.Loops
         private ReadInputLoop()
         {
             Id = "read_input_loop";
+            
+            _consoleInputHandler = new ConsoleInputHandler();
         }
 
         private ReadInputLoop(string id)
         {
             Id = id;
+            
+            _consoleInputHandler = new ConsoleInputHandler();
         }
         
         /// <summary>
@@ -23,6 +28,7 @@ namespace Connector.Loops
         /// </summary>
         private event Action<string> OnUpdateEvent = delegate(string f) {  };
 
+        private ConsoleInputHandler _consoleInputHandler;
         
         protected override Task Update()
         {
@@ -46,7 +52,7 @@ namespace Connector.Loops
                 
                 // LoopManager.Log($"Введите значение");
                 
-                var str = InputHandler.GetInputLine();
+                var str = _consoleInputHandler.GetInputLine();
                 
                 // WORKSPACE
                 
