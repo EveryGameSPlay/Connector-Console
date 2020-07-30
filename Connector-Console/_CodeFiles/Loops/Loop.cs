@@ -20,12 +20,14 @@ namespace Connector.Loops
         
         public LoopStatus LoopStatus { get; protected set; }
 
+        public bool IsPaused { get; protected set; }
+
         /// <summary>
         /// Запускает работу цикла в отдельную задачу
         /// </summary>
         public virtual void Start()
         {
-            LoopManager.Log($"Loop started: {Id}");
+            LoopManager.Log($"Loop {Id}: ожидает старта");
 
             LoopStatus = LoopStatus.WaitingForStart;
             
@@ -40,7 +42,23 @@ namespace Connector.Loops
         protected abstract Task Update();
         
         protected abstract void Dispose();
-        
+
+        /// <summary>
+        /// Ставит цикл на паузу
+        /// </summary>
+        public void Stop()
+        {
+            IsPaused = true;
+        }
+
+        /// <summary>
+        /// Снимает цикл с паузы
+        /// </summary>
+        public void Resume()
+        {
+            IsPaused = false;
+        }
+
         /// <summary>
         /// Останавливает цикл и связанный с ним Task
         /// </summary>
@@ -74,6 +92,8 @@ namespace Connector.Loops
         {
             LoopManager.Log(value);
         }
+
+         
     }
 
     public enum LoopStatus

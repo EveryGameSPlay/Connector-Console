@@ -2,6 +2,8 @@
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+using Commands.CommandsRealization;
+using Connector.Commands;
 using Connector.ConsoleRealizarions.Input;
 using Connector.Input;
 
@@ -12,15 +14,11 @@ namespace Connector.Loops
         private ReadInputLoop()
         {
             Id = "read_input_loop";
-            
-            _consoleInputHandler = new ConsoleInputHandler();
         }
 
         private ReadInputLoop(string id)
         {
             Id = id;
-            
-            _consoleInputHandler = new ConsoleInputHandler();
         }
         
         /// <summary>
@@ -28,12 +26,18 @@ namespace Connector.Loops
         /// </summary>
         private event Action<string> OnUpdateEvent = delegate(string f) {  };
 
-        private ConsoleInputHandler _consoleInputHandler;
-        
         protected override Task Update()
         {
             LoopStatus = LoopStatus.Running;
-            
+
+            ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler();
+            CommandHandler commandHandler = new CommandHandler();
+
+            commandHandler.Add(new Command("cancel", (string[] args) =>
+            {
+                Cancel();
+            }));
+
             while (true)
             {
                 var token = CancellationTokenSource.Token;
@@ -46,23 +50,16 @@ namespace Connector.Loops
 
                     LoopStatus = LoopStatus.Canceled;
                     
-                    LoopManager.Log($"Цикл {Id} остановлен");
+                    LoopManager.Log($"Loop {Id}: остановлен");
                     return WorkspaceTask;
                 }
-                
-                // LoopManager.Log($"Введите значение");
-                
-                var str = _consoleInputHandler.GetInputLine();
-                
-                // WORKSPACE
-                
-                // END WORKSPACE
-                
-                if(str == "cancel")
-                    Cancel();
-                
-                // LoopManager.Log($"Введено значение: {str}");
-            
+
+                if(!IsPaused)
+                {
+                    var str = consoleInputHandler.GetInputLine();
+                    OnUpdateEvent(str);
+                }
+
             }
 
             LoopStatus = LoopStatus.Completed;

@@ -29,10 +29,18 @@ namespace Connector
             Initialize();
 
             var readInputLoop = ReadInputLoop.Create();
+
+            CommandHandler commandHandler = new CommandHandler();
+
+            commandHandler.Add(new Command("cancel", (string[] _args) =>
+            {
+                readInputLoop.Cancel();
+            }));
+
+            readInputLoop.Subscribe(commandHandler.Handle);
+
             readInputLoop.Start();
             
-            
-
             LoopManager.WaitAll();
         }
 
