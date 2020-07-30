@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Connector.Printer;
+using System;
 using System.Drawing;
 
-namespace Connector.Printer.Displays
+namespace Connector.ConsoleRealizarions.Displays
 {
     public class ConsoleDisplay : IDisplay
     {

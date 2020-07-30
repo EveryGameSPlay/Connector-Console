@@ -10,12 +10,12 @@ using System.Collections.Generic;
 
 //Connector
 using Connector.Printer;
-using Connector.Printer.Displays;
 using Connector.Buffers;
 using Connector.Commands;
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 using Commands.CommandsRealization;
+using Connector.ConsoleRealizarions.Displays;
 
 namespace Connector
 {
