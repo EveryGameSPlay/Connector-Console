@@ -36,6 +36,23 @@ namespace Connector.Loops
             
             Print.Log($"Добавлен цикл {loop.Id}", Color.Green);
         }
+        
+        /// <summary>
+        /// Запускает все циклы, ожидающие старта.
+        /// Циклы ожидают старта при создании
+        /// </summary>
+        public static void StartAll()
+        {
+            for (var i = 0; i < _loops.Count; i++)
+            {
+                var loop = _loops[i];
+
+                if (loop.LoopStatus == LoopStatus.WaitingForStart)
+                {
+                    loop.Start();
+                }
+            }
+        }
 
         /// <summary>
         /// Ожидает завершения всех задач в циклах
@@ -76,7 +93,7 @@ namespace Connector.Loops
             for (var i = 0; i < _loops.Count; i++)
             {
                 var loop = _loops[i];
-                Print.Log($"{loop.Id}: задача имеет статус ({loop.LoopStatus})", Color.Gray);
+                Print.Log($"Loop {loop.Id}: задача имеет статус ({loop.LoopStatus})", Color.Gray);
             }
         }
 

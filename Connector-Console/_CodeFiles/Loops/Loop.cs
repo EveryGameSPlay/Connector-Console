@@ -6,6 +6,12 @@ namespace Connector.Loops
 {
     public abstract class Loop : IProgress<LoopStatus>
     {
+        protected Loop()
+        {
+            LoopStatus = LoopStatus.WaitingForStart;
+            IsPaused = false;
+        }
+        
         /// <summary>
         /// Идентификатор цикла
         /// </summary>
@@ -27,10 +33,7 @@ namespace Connector.Loops
         /// </summary>
         public virtual void Start()
         {
-            LoopManager.Log($"Loop {Id}: ожидает старта");
-
-            LoopStatus = LoopStatus.WaitingForStart;
-            
+            LoopManager.Log($"Loop {Id}: запущен");
             // Запускает новую задачу
             WorkspaceTask = Task.Run(() => Update());
         }
@@ -98,10 +101,10 @@ namespace Connector.Loops
 
     public enum LoopStatus
     {
-        Running,
-        WaitingForStart,
-        Canceled,
-        Faulted,
-        Completed
+        Running = 1,
+        WaitingForStart = 0,
+        Canceled = 3,
+        Faulted = 4,
+        Completed = 2
     }
 }

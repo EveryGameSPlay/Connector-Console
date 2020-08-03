@@ -6,17 +6,18 @@ using Commands.CommandsRealization;
 using Connector.Commands;
 using Connector.ConsoleRealizarions.Input;
 using Connector.Input;
+using Gasanov.Tools;
 
 namespace Connector.Loops
 {
     public class ReadInputLoop: Loop
     {
-        private ReadInputLoop()
+        private ReadInputLoop() : base()
         {
             Id = "read_input_loop";
         }
 
-        private ReadInputLoop(string id)
+        private ReadInputLoop(string id) : base()
         {
             Id = id;
         }
@@ -30,14 +31,7 @@ namespace Connector.Loops
         {
             LoopStatus = LoopStatus.Running;
 
-            ConsoleInputHandler consoleInputHandler = new ConsoleInputHandler();
-            CommandHandler commandHandler = new CommandHandler();
-
-            commandHandler.Add(new Command("cancel", (string[] args) =>
-            {
-                Cancel();
-            }));
-
+            var inputHandler = Toolbox.GetTool<IInputHandler>();
             while (true)
             {
                 var token = CancellationTokenSource.Token;
@@ -54,9 +48,12 @@ namespace Connector.Loops
                     return WorkspaceTask;
                 }
 
+                // Если не стоит пауза
                 if(!IsPaused)
                 {
-                    var str = consoleInputHandler.GetInputLine();
+                    var str = inputHandler.GetInputLine();
+                    
+                    // Вызываем обновление
                     OnUpdateEvent(str);
                 }
 
@@ -133,6 +130,8 @@ namespace Connector.Loops
             
             // Добавляем в менеджер
             LoopManager.AddLoop(updateLoop);
+            
+            LoopManager.Log($"Loop {updateLoop.Id}: ожидает старта");
 
             // Запускаем, если нужно
             if (startOnAwake)
@@ -142,7 +141,6 @@ namespace Connector.Loops
             
             return updateLoop;
         }
-        
         
     }
 }
