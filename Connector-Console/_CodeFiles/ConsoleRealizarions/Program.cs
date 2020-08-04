@@ -15,7 +15,7 @@ using Connector.Commands;
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Commands.CommandsRealization;
+using Connector.Commands.CommandsRealization;
 using Connector.ConsoleRealizarions.Displays;
 using Connector.ConsoleRealizarions.Input;
 using Connector.Input;

@@ -1,24 +1,23 @@
 ﻿using System;
 using Connector.Commands;
 
-namespace Commands.CommandsRealization
+namespace Connector.Commands.CommandsRealization
 {
     /// <summary>
     /// Класс универсального типа команд
     /// </summary>
-    public class Command: ICommand
+    public class Command: CommandBase
     {
-        public Command(string id, Action<string[]> action)
+        public Command(string id, Action<string[]> action) : base()
         {
             Id = id;
             Action = action;
         }
         
-        public string Id { get; private set; }
 
         public Action<string[]> Action;
         
-        public void Invoke(string[] args)
+        public override void Invoke(string[] args)
         {
             Action(args);
         }

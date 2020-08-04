@@ -2,13 +2,16 @@
 using Connector.Commands;
 using Connector.Printer;
 
-namespace Commands.CommandsRealization
+namespace Connector.Commands.CommandsRealization
 {
-    public class TestCommand: ICommand
+    public class TestCommand : CommandBase
     {
-        public string Id { get; private set; } = "testCommand";
-        
-        public void Invoke(string[] args)
+        public TestCommand() :base()
+        {
+            Id = "testCommand";
+        }
+
+        public override void Invoke(string[] args)
         {
             if (args.Length >= 3)
                 Print.Log($"{args[0]}///{args[1]}//{args[2]}", Color.Yellow);

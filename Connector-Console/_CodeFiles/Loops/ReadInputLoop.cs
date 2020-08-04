@@ -2,7 +2,7 @@
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
-using Commands.CommandsRealization;
+using Connector.Commands.CommandsRealization;
 using Connector.Commands;
 using Connector.ConsoleRealizarions.Input;
 using Connector.Input;

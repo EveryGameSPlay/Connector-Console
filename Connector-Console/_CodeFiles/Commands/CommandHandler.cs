@@ -45,11 +45,12 @@ namespace Connector.Commands
         /// </summary>  
         public void Handle(string command)
         {
+
             Match commandMatch = _regexCommand.Match(command);
 
             if (commandMatch.Success)
             {
-                string commandId = commandMatch.Groups[1].Value;
+                string commandId = commandMatch.Groups[1].Value.ToLower();
 
                 string[] commandParams = _regexCommandParams
                     .Matches(commandMatch.Groups[2].Value)
