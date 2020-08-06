@@ -1,23 +1,19 @@
 ﻿using System;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
-using Commands.CommandsRealization;
-using Connector.Commands;
-using Connector.ConsoleRealizarions.Input;
-using Connector.Input;
+using Connector.Network;
 using Gasanov.Tools;
 
 namespace Connector.Loops
 {
-    public class ReadInputLoop: Loop
+    public class ReadNetworkLoop : Loop
     {
-        private ReadInputLoop() : base()
+        private ReadNetworkLoop() : base()
         {
-            Id = "read_input_loop";
+            Id = "read_network_loop";
         }
 
-        private ReadInputLoop(string id) : base()
+        private ReadNetworkLoop(string id) : base()
         {
             Id = id;
         }
@@ -26,41 +22,32 @@ namespace Connector.Loops
         /// Событие, взывающееся при обновлении
         /// </summary>
         private event Action<string> OnUpdateEvent = delegate(string f) {  };
-
+        
         protected override Task Update()
         {
-            LoopStatus = LoopStatus.Running;
+            var netService = Toolbox.GetTool<INetworkService>();
 
-            var inputHandler = Toolbox.GetTool<IInputHandler>();
             while (true)
             {
                 if (CheckCancelationToken())
                     return WorkspaceTask;
 
-                // Если не стоит пауза
-                if(!IsPaused)
+                if (!IsPaused)
                 {
-                    var str = inputHandler.GetInputLine();
+                    if(netService == null)
+                        continue;
                     
-                    // Вызываем обновление
+                    var str = netService.RecieveString();
                     OnUpdateEvent(str);
                 }
-
             }
-
-            LoopStatus = LoopStatus.Completed;
-            return WorkspaceTask;
         }
-
-        protected override void Dispose()
-        {
-        }
-
-
+        
+        
         /// <summary>
         /// Подписывает метод на события обновления
         /// </summary>
-        public ReadInputLoop Subscribe(Action<string> action)
+        public ReadNetworkLoop Subscribe(Action<string> action)
         {
             if (action != null)
                 OnUpdateEvent += action;
@@ -77,10 +64,10 @@ namespace Connector.Loops
                 OnUpdateEvent -= action;
         }
         
-        
-        
-        
-        
+        protected override void Dispose()
+        {
+            return;
+        }
         
         
         
@@ -91,15 +78,15 @@ namespace Connector.Loops
         /// <summary>
         /// Создает новый экземпляр ReadInputLoop
         /// </summary>
-        public static ReadInputLoop Create()
+        public static ReadNetworkLoop Create()
         {
-            return Create("read_input_loop");
+            return Create("read_network_loop");
         }
 
         // <summary>
         /// Создает новый экземпляр ReadInputLoop
         /// </summary>
-        public static ReadInputLoop Create(string id)
+        public static ReadNetworkLoop Create(string id)
         {
             return Create(id, null);
         }
@@ -107,29 +94,29 @@ namespace Connector.Loops
         // <summary>
         /// Создает новый экземпляр ReadInputLoop и подписывает метод
         /// </summary>
-        public static ReadInputLoop Create(string id, Action<string> action, bool startOnAwake = false)
+        public static ReadNetworkLoop Create(string id, Action<string> action, bool startOnAwake = false)
         {
             // Новый экземпляр
-            var updateLoop = new ReadInputLoop(id);
-            updateLoop.CancellationTokenSource = new CancellationTokenSource();
+            var readNetworkLoop = new ReadNetworkLoop(id);
+            readNetworkLoop.CancellationTokenSource = new CancellationTokenSource();
 
             // Подписываем переданный метод
             if (action != null)
-                updateLoop.OnUpdateEvent += action;
+                readNetworkLoop.OnUpdateEvent += action;
             
             // Добавляем в менеджер
-            LoopManager.AddLoop(updateLoop);
+            LoopManager.AddLoop(readNetworkLoop);
             
-            LoopManager.Log($"Loop {updateLoop.Id}: ожидает старта");
+            LoopManager.Log($"Loop {readNetworkLoop.Id}: ожидает старта");
 
             // Запускаем, если нужно
             if (startOnAwake)
             {
-                updateLoop.Start();
+                readNetworkLoop.Start();
             }
             
-            return updateLoop;
+            return readNetworkLoop;
         }
-        
+
     }
 }

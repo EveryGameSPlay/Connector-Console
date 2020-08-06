@@ -22,12 +22,12 @@ namespace Connector.ConsoleRealizarions.Displays
             _colors.Add(Color.DarkBlue, ConsoleColor.DarkBlue);
             _colors.Add(Color.DarkGray, ConsoleColor.DarkGray);
             _colors.Add(Color.DarkGreen, ConsoleColor.DarkGreen);
+            _colors.Add(Color.Green, ConsoleColor.Green);
             _colors.Add(Color.DarkMagenta, ConsoleColor.DarkMagenta);
+            _colors.Add(Color.Magenta, ConsoleColor.Magenta);
             _colors.Add(Color.DarkRed, ConsoleColor.DarkRed);
             _colors.Add(Color.Gold, ConsoleColor.DarkYellow);
             _colors.Add(Color.Gray, ConsoleColor.Gray);
-            _colors.Add(Color.Green, ConsoleColor.Green);
-            _colors.Add(Color.Magenta, ConsoleColor.Magenta);
             _colors.Add(Color.Red, ConsoleColor.Red);
             _colors.Add(Color.Yellow, ConsoleColor.Yellow);
             _colors.Add(Color.Black, ConsoleColor.Black);

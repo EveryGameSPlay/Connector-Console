@@ -89,6 +89,28 @@ namespace Connector.Loops
         }
 
         /// <summary>
+        /// Проверяет запрос отмены. True если запрос действителен.
+        /// </summary>
+        protected bool CheckCancelationToken()
+        {
+            var token = CancellationTokenSource.Token;
+            
+            // Если запрошена отмена цикла - завершаем работу
+            if (token.IsCancellationRequested == true)
+            {
+                // Очищаем данные
+                Dispose();
+
+                LoopStatus = LoopStatus.Canceled;
+                    
+                LoopManager.Log($"Loop {Id}: остановлен");
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Вывод текущего статуса
         /// </summary>
         public void Report(LoopStatus value)

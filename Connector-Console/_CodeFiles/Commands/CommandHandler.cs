@@ -21,7 +21,7 @@ namespace Connector.Commands
         /// для поиска комманд в строке
         /// </summary>
         private static Regex _regexCommand = new Regex(@"^\s*(\w+)\s*(:(.*))?");
-        private static Regex _regexCommandParams = new Regex(@"\w+(?=\s*,|\s*$)");
+        private static Regex _regexCommandParams = new Regex(@"[^,]+(?=\s*,|\s*$)");
         
         
         /// <summary>
@@ -52,9 +52,14 @@ namespace Connector.Commands
                 string commandId = commandMatch.Groups[1].Value;
 
                 string[] commandParams = _regexCommandParams
-                    .Matches(commandMatch.Groups[2].Value)
+                    .Matches(commandMatch.Groups[3].Value)
                     .Select(m => m.Value)
                     .ToArray();
+
+                for (var i = 0; i < commandParams.Length; i++)
+                {
+                    commandParams[i] = commandParams[i].Trim();
+                }
 
                 var commandObject = Commands.FirstOrDefault(x => x.Id == commandId);
 
@@ -79,18 +84,19 @@ namespace Connector.Commands
         /// Добавляет новую команду в словарь с проверкой
         /// на наличие её ключа в текущем словаре команд
         /// </summary>
-        public void Add(ICommand command)
+        public ICommand Add(ICommand command)
         {
             if (command == null)
-                return;
+                return null;
             
             if (Commands.Exists(x=> x.Id == command.Id))
             {
                 Print.LogWarning($"Команда с ключом {command.Id} уже есть в словаре!");
-                return;
+                return null;
             }
 
             Commands.Add(command);
+            return command;
         }
         /// ---------------------------------------------
 
