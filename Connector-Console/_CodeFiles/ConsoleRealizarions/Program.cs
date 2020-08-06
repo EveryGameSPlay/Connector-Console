@@ -62,7 +62,9 @@ namespace Connector.ConsoleRealizarions
             {
                 readInputLoop.Cancel();
             }));
-            
+
+            commandHandler.Add(new Command("go_fuck", (string[] args) => { Print.Log("Я работаю");  }));
+
             readInputLoop.Subscribe(commandHandler.Handle);
             
             // Цикл чтения сокетов
@@ -70,7 +72,11 @@ namespace Connector.ConsoleRealizarions
 
             var messageBuffer = Toolbox.GetTool<MessageBuffer>();
             if (messageBuffer == null)
-                Toolbox.Add(MessageBuffer.Create("network_buffer"));
+            {
+                messageBuffer = MessageBuffer.Create("network_buffer");
+                Toolbox.Add(messageBuffer);
+            }
+                
 
             readNetworkLoop.Subscribe((string str) => messageBuffer.Add(str));
         }
