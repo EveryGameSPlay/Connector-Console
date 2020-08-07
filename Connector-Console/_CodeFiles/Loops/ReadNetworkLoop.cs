@@ -23,14 +23,14 @@ namespace Connector.Loops
         /// </summary>
         private event Action<string> OnUpdateEvent = delegate(string f) {  };
         
-        protected override Task Update()
+        protected override void Update()
         {
             var netService = Toolbox.GetTool<INetworkService>();
 
             while (true)
             {
-                if (CheckCancelationToken())
-                    return WorkspaceTask;
+                //if (CheckCancelationToken())
+                  //  return;
 
                 if (!IsPaused)
                 {
@@ -41,9 +41,10 @@ namespace Connector.Loops
                     if (String.IsNullOrEmpty(str))
                         continue;
 
-                    LoopManager.Log(str);
                     OnUpdateEvent(str);
                 }
+                
+                Sleep();
             }
         }
         

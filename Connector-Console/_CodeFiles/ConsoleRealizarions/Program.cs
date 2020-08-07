@@ -34,7 +34,7 @@ namespace Connector.ConsoleRealizarions
             InitialzieLoops();
 
             LoopManager.StartAll();
-            LoopManager.WaitAll();
+            LoopManager.WaitAll(5000);
         }
 
         /// <summary>

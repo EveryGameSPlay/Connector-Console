@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using System.Threading.Tasks;
 using Connector.Printer;
 
@@ -55,9 +56,10 @@ namespace Connector.Loops
         }
 
         /// <summary>
-        /// Ожидает завершения всех задач в циклах
+        /// Ожидает завершения всех задач в циклах.
+        /// Останавливает поток на millisecondsDelay каждую итерацию.
         /// </summary>
-        public static void WaitAll()
+        public static void WaitAll(int msDelay)
         {
             // Пока не дождемся окончания всех задач
             while (true)
@@ -73,27 +75,39 @@ namespace Connector.Loops
                     {
                         allCompleted = false;
                     }
-                    
-                    // ПАМЯТКА: Ожидание останавливает поток, в котором исполняется задача (deadlock)
-                    // _loops[i].WorkspaceTask.Wait();
                 }
 
                 // Все циклы закончили работу
                 if (allCompleted == true)
                 {
-                    ShowTaskStatus();
+                    ShowLoopStatus();
+                    AbortLoopThreads();
+                    
 
                     return;
                 }
+                
+                // Задержка для освобождения ресурсов
+                Thread.Sleep(msDelay);
             }
         }
 
-        public static void ShowTaskStatus()
+        public static void ShowLoopStatus()
         {
             for (var i = 0; i < _loops.Count; i++)
             {
                 var loop = _loops[i];
                 Print.Log($"Loop {loop.Id}: задача имеет статус ({loop.LoopStatus})", Color.Gray);
+            }
+        }
+
+        public static void AbortLoopThreads()
+        {
+            for (var i = 0; i < _loops.Count; i++)
+            {
+                var loop = _loops[i];
+                loop.WorkspaceThread.Abort();
+                Print.Log($"Loop {loop.Id}: поток был закрыт)", Color.Gray);
             }
         }
 
