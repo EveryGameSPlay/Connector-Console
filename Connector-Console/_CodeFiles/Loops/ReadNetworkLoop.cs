@@ -38,6 +38,10 @@ namespace Connector.Loops
                         continue;
                     
                     var str = netService.RecieveString();
+                    if (String.IsNullOrEmpty(str))
+                        continue;
+
+                    LoopManager.Log(str);
                     OnUpdateEvent(str);
                 }
             }
