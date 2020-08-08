@@ -34,7 +34,7 @@ namespace Connector.Network
                 return;
             }
             
-            NetworkServiceLogger.LogWarning($"IP адрес \"{ip}\" имеет некоректный формат. (x*.x*.x*.x*)");
+            NetworkServiceLogger.LogWarning($"IP адрес \"{ip}\" имеет некорректный формат. (x*.x*.x*.x*)");
         }
 
         public void SetRecieverPort(int port)
@@ -64,9 +64,9 @@ namespace Connector.Network
 
             var bytes = Encoding.UTF8.GetBytes(str);
 
-            //var endPoint = new IPEndPoint(RecieverIp, RecieverPort);
+            var endPoint = new IPEndPoint(RecieverIp, RecieverPort);
 
-            var bytesCount = recieverClient.Send(bytes, bytes.Length, RecieverIp.ToString(), RecieverPort);
+            var bytesCount = recieverClient.Send(bytes, bytes.Length, endPoint);
 
             return bytesCount;
         }

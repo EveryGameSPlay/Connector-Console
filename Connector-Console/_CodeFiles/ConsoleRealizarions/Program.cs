@@ -108,8 +108,6 @@ namespace Connector.ConsoleRealizarions
                     Toolbox.Remove(networkService);
                 }
 
-
-
                 if (args.Length > 0)
                 {
                     switch (args[0])
@@ -121,9 +119,9 @@ namespace Connector.ConsoleRealizarions
                             break;
                         
                         case "tcp":
-                            var udpServiceTCP = new UdpService();
-                            Toolbox.Add(udpServiceTCP);
-                            Print.Assert(false, "Установлен протокол UDP. СДЕЛАЙТЕ TCP РЕАЛИЗАЦИЮ.");
+                            var tcpService = new TcpService();
+                            Toolbox.Add(tcpService);
+                            Print.Assert(true, "Установлен протокол TCP");
                             break;
                         
                         default:
@@ -140,7 +138,7 @@ namespace Connector.ConsoleRealizarions
                     Print.LogWarning("По умолчанию выбран протокол UDP");
                 }
                 
-            })).Invoke(new string[0]);
+            }));
             
             commandHandler.Add(new Command("set_reciever_ip", (string[] args) =>
             {
