@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using Connector.Network;
+using Connector.Printer;
 using Gasanov.Tools;
 
 namespace Connector.Loops
@@ -29,8 +31,8 @@ namespace Connector.Loops
 
             while (true)
             {
-                //if (CheckCancelationToken())
-                  //  return;
+                if (CheckCancelationToken())
+                    return;
 
                 if (!IsPaused)
                 {

@@ -11,6 +11,8 @@ namespace Connector.ConsoleRealizarions.Displays
 
         private static readonly Dictionary<Color, ConsoleColor> _colors;
 
+        private Color previousColor;
+        private Color previousColorBack;
 
         static ConsoleColoredDisplay()
         {
@@ -58,6 +60,11 @@ namespace Connector.ConsoleRealizarions.Displays
         /// <param name="color"></param>
         public void ShowMessage(object message, Color color)
         {
+            if (previousColor != color)
+                Console.WriteLine();
+
+            previousColor = color;
+
             Console.ForegroundColor = GetConsoledColor(color);
             ShowMessage(message);
             Console.ResetColor();
@@ -65,6 +72,11 @@ namespace Connector.ConsoleRealizarions.Displays
 
         public void ShowMessage(object message, Color color, Color colorBack)
         {
+            if (previousColorBack != colorBack)
+                Console.WriteLine();
+
+            previousColorBack = colorBack;
+
             Console.BackgroundColor = GetConsoledColor(colorBack);
 
             ShowMessage(message, color);

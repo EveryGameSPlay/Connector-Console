@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Connector.Network
 {
-    public class UdpService : INetworkService
+    public class UdpService : NetworkServiceBase
     {
         public UdpService()
         {
@@ -15,51 +15,25 @@ namespace Connector.Network
         private UdpClient recieverClient;
 
         private UdpClient listenerClient;
-        
-        public IPAddress RecieverIp { get; private set; }
-        
-        public int RecieverPort { get; private set; }
-        
-        public int ListenerPort { get; private set; }
 
-        public void SetRecieverIp(string ip)
-        {
-            IPAddress parsedIp;
-            var isParsed = IPAddress.TryParse(ip, out parsedIp);
-
-            if (isParsed == true)
-            {
-                RecieverIp = parsedIp;
-                NetworkServiceLogger.Log("Адрес получателя установлен.");
-                return;
-            }
-            
-            NetworkServiceLogger.LogWarning($"IP адрес \"{ip}\" имеет некорректный формат. (x*.x*.x*.x*)");
-        }
-
-        public void SetRecieverPort(int port)
-        {
-            RecieverPort = port;
-            NetworkServiceLogger.Log("Порт получателя установлен.");
-        }
-
-        public void SetRecieverInfo(string ip, int port)
-        {
-            SetRecieverIp(ip);
-            SetRecieverPort(port);
-        }
-
-        public void SetListenerPort(int port)
+        public override void SetListenerPort(int port)
         {
             ListenerPort = port;
 
             listenerClient = new UdpClient(ListenerPort);
-            
-            NetworkServiceLogger.Log("Порт прослушивания установлен.");
+
+            NetworkServiceLogger.Log($"Порт прослушивания {ListenerPort} установлен");
         }
 
-        public int Send(object message)
+        public override int Send(object message)
         {
+
+            if (RecieverIp == null)
+            {
+                MessageNotSended();
+                return 0;
+            }
+
             var str = message.ToString();
 
             var bytes = Encoding.UTF8.GetBytes(str);
@@ -68,39 +42,41 @@ namespace Connector.Network
 
             var bytesCount = recieverClient.Send(bytes, bytes.Length, endPoint);
             
-            NetworkServiceLogger.Log("Данные отправлены");
+
+            if (!IsFullSended(bytes, bytes.Length))
+            {
+                MessageNotFullySended(bytesCount, bytes.Length);
+            }
+            else
+            {
+                MessageFullySended();
+            }
 
             return bytesCount;
         }
 
-        public byte[] Recieve(ref IPEndPoint ip)
+        public override byte[] Recieve(ref IPEndPoint ip)
         {
             if (listenerClient == null)
                 return null;
+
+            if (ip.Address == IPAddress.Any)
+                ip = null;
 
             var bytes = listenerClient.Receive(ref ip);
 
             return bytes;
         }
 
-        public string RecieveString()
+        public override void Close()
         {
-            IPEndPoint ip = null;
-            var bytes = Recieve(ref ip);
+            recieverClient?.Close();
+            listenerClient?.Close();
 
-            if(bytes == null)
-                return String.Empty;
-            
-            return Encoding.UTF8.GetString(bytes);
+            NetworkServiceLogger.Log("UDP протокол закрыт");
         }
 
-        public void Close()
-        {
-            recieverClient.Close();
-            listenerClient.Close();
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             Close();
             

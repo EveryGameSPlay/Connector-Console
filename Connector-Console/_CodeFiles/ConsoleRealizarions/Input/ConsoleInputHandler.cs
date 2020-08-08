@@ -11,7 +11,10 @@ namespace Connector.ConsoleRealizarions.Input
         /// </summary>
         public string GetInputLine()
         {
-            return Console.ReadLine();
+            Console.WriteLine();
+            var str = Console.ReadLine();
+            Console.WriteLine();
+            return str;
         }
     }
 }

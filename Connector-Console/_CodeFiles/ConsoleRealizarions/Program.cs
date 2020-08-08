@@ -23,6 +23,7 @@ using Connector.Input;
 using Connector.Loops;
 using Connector.Network;
 using Gasanov.Tools;
+using System.Net;
 
 namespace Connector.ConsoleRealizarions
 {
@@ -101,11 +102,22 @@ namespace Connector.ConsoleRealizarions
             commandHandler.Add(new Command("set_protocol", (string[] args) =>
             {
                 var networkService = Toolbox.GetTool<INetworkService>();
+                IPAddress recieverIp = null;
+                int recieverPort = -1;
+                int listenerPort = -1;
 
                 if (networkService != null)
                 {
+                    recieverIp = networkService.RecieverIp;
+                    recieverPort = networkService.RecieverPort;
+                    listenerPort = networkService.ListenerPort;
+
                     networkService.Dispose();
                     Toolbox.Remove(networkService);
+                }
+                else
+                {
+                    recieverIp = IPAddress.Loopback;
                 }
 
                 if (args.Length > 0)
@@ -114,18 +126,33 @@ namespace Connector.ConsoleRealizarions
                     {
                         case "udp":
                             var udpService = new UdpService();
+                            udpService.SetRecieverInfo(recieverIp.ToString(), recieverPort);
+
+                            if (listenerPort >= 0)
+                                udpService.SetListenerPort(listenerPort);
+
                             Toolbox.Add(udpService);
-                            Print.Assert(true, "Установлен протокол UDP");
+                            Print.Log("Установлен протокол UDP", Color.DarkBlue);
                             break;
                         
                         case "tcp":
                             var tcpService = new TcpService();
+                            tcpService.SetRecieverInfo(recieverIp.ToString(), recieverPort);
+
+                            if (listenerPort >= 0)
+                                tcpService.SetListenerPort(listenerPort);
+
                             Toolbox.Add(tcpService);
-                            Print.Assert(true, "Установлен протокол TCP");
+                            Print.Log("Установлен протокол TCP", Color.DarkBlue);
                             break;
                         
                         default:
                             var udpServiceDefault = new UdpService();
+                            udpServiceDefault.SetRecieverInfo(recieverIp.ToString(), recieverPort);
+
+                            if (listenerPort >= 0)
+                                udpServiceDefault.SetListenerPort(listenerPort);
+
                             Toolbox.Add(udpServiceDefault);
                             Print.LogWarning("По умолчанию выбран протокол UDP");
                             break;
@@ -134,11 +161,16 @@ namespace Connector.ConsoleRealizarions
                 else
                 {
                     var udpServiceDefault = new UdpService();
+                    udpServiceDefault.SetRecieverInfo(recieverIp.ToString(), recieverPort);
+
+                    if (listenerPort >= 0)
+                        udpServiceDefault.SetListenerPort(listenerPort);
+
                     Toolbox.Add(udpServiceDefault);
                     Print.LogWarning("По умолчанию выбран протокол UDP");
                 }
                 
-            }));
+            })).Invoke(new string[] { "tcp" });
             
             commandHandler.Add(new Command("set_reciever_ip", (string[] args) =>
             {
@@ -240,7 +272,7 @@ namespace Connector.ConsoleRealizarions
                     return;
                 }
 
-                foreach (var str in msbuf.Query())
+                foreach (var str in msbuf.QueryQueue())
                 {
                     Print.Log(str,Color.Blue);
                 }

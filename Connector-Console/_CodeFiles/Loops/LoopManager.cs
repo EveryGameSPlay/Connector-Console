@@ -113,7 +113,7 @@ namespace Connector.Loops
 
         public static void Log(object message)
         {
-            Print.Log(message);
+            Print.Log(message, Color.Gold);
         }
 
         public static void LogWarning(object message)

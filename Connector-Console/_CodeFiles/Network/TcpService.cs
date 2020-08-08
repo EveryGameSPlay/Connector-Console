@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Connector.Network.Wrappers;
+using Connector.Printer;
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -6,7 +8,7 @@ using System.Text;
 
 namespace Connector.Network
 {
-    public class TcpService : INetworkService
+    public class TcpService : NetworkServiceBase
     {
 
         public TcpService()
@@ -15,6 +17,7 @@ namespace Connector.Network
 
             RecieverIp = IPAddress.Any;
             RecieverPort = -1;
+            ListenerPort = -1;
 
             BufferSize = 256;
         }
@@ -26,50 +29,15 @@ namespace Connector.Network
 
         private TcpClient recieverClient;
 
-        private TcpListener listenerServer;
+        private TcpListenerWrapper listenerServer;
 
 
-        public IPAddress RecieverIp { get; private set; }
-
-        public int RecieverPort { get; private set; }
-
-        public int ListenerPort { get; private set; }
 
         /// <summary>
         /// Размер буфера получаемых сообщений.
         /// Стандартное значение: 256 байт.
         /// </summary>
         public int BufferSize { get; set; }
-
-
-        public void SetRecieverIp(string ip)
-        {
-            IPAddress parsedIp;
-            var isParsed = IPAddress.TryParse(ip, out parsedIp);
-
-            if (isParsed == true)
-            {
-                RecieverIp = parsedIp;
-                NetworkServiceLogger.Log("Адрес получателя установлен.");
-
-                return;
-            }
-
-            NetworkServiceLogger.LogWarning($"IP адрес \"{ip}\" имеет некорректный формат. (x*.x*.x*.x*)");
-        }
-
-        public void SetRecieverPort(int port)
-        {
-            RecieverPort = port;
-
-            NetworkServiceLogger.LogWarning("Порт получателя установлен");
-        }
-
-        public void SetRecieverInfo(string ip, int port)
-        { 
-            SetRecieverIp(ip);
-            SetRecieverPort(port);
-        }
 
         private bool TryConnect()
         {
@@ -79,28 +47,30 @@ namespace Connector.Network
             if (RecieverPort < 0)
                 return false;
 
-            recieverClient.Close();
-
-            recieverClient.Connect(RecieverIp, RecieverPort);
+            if (!recieverClient.Connected)
+                recieverClient.Connect(RecieverIp, RecieverPort);
 
             return true;
         }
 
-        public void SetListenerPort(int port)
+        public override void SetListenerPort(int port)
         {
             ListenerPort = port;
 
-            listenerServer = new TcpListener(IPAddress.Any, port);
-            NetworkServiceLogger.Log("Порт прослушивания установлен");
+            listenerServer = new TcpListenerWrapper(IPAddress.Any, port);
+            NetworkServiceLogger.Log($"Порт прослушивания {ListenerPort} установлен");
 
             listenerServer.Start();
             NetworkServiceLogger.Log("Прослушивание началось");
         }
 
-        public int Send(object message)
+        public override int Send(object message)
         {
             if (!TryConnect())
+            {
+                MessageNotSended();
                 return 0;
+            }
 
             var str = message.ToString();
 
@@ -108,43 +78,56 @@ namespace Connector.Network
             byte[] data = Encoding.UTF8.GetBytes(str);
             stream.Write(data, 0, data.Length);
 
+            MessageFullySended();
+
             return data.Length;
         }
 
-        public byte[] Recieve(ref IPEndPoint ip)
+
+        // TODO: заменить Recieve на Listen и передавать в него активатор события Loop`а.
+        // TODO: для каждого TCP соединения сделать отдельный поток
+        public override byte[] Recieve(ref IPEndPoint ip)
         {
-            TcpClient client = listenerServer.AcceptTcpClient();
 
-            NetworkStream stream = client.GetStream();
+            if (listenerServer == null)
+                return null;
 
-            byte[] data = new byte[BufferSize];
-            int bytes = stream.Read(data, 0, data.Length);
+            if (!listenerServer.Active)
+                return null;
 
-            stream.Close();
-            client.Close();
+            try
+            {
+                NetworkServiceLogger.Log("Ожидание клиента");
+                TcpClient client = listenerServer.AcceptTcpClient();
+                NetworkServiceLogger.Log("Клиент получен");
+                NetworkStream stream = client.GetStream();
 
-            return data.Take(bytes).ToArray();
+                byte[] data = new byte[BufferSize];
+                int bytes = stream.Read(data, 0, data.Length);
+
+                //stream.Close();
+                //client.Close();
+
+                return data.Take(bytes).ToArray();
+            }
+            catch(SocketException ex)
+            {
+                NetworkServiceLogger.Log("Получение клиентов остановлено извне");
+            }
+
+            return null;
         }
 
-        public string RecieveString()
+
+        public override void Close()
         {
-            IPEndPoint ip = null;
-            var bytes = Recieve(ref ip);
+            recieverClient?.Close();
+            listenerServer?.Stop();
 
-            if (bytes == null)
-                return String.Empty;
-
-            return Encoding.UTF8.GetString(bytes);
+            NetworkServiceLogger.Log("TCP протокол закрыт");
         }
 
-
-        public void Close()
-        {
-            recieverClient.Close();
-            listenerServer.Stop();
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             Close();
 
