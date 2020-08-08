@@ -10,6 +10,8 @@ namespace Connector.Loops
         {
             LoopStatus = LoopStatus.WaitingForStart;
             IsPaused = false;
+
+            DelayTime = 1500;
         }
         
         /// <summary>
@@ -18,15 +20,26 @@ namespace Connector.Loops
         public string Id { get; protected set; }
         
         /// <summary>
-        /// Задача, в которой работает экземпляр
+        /// Поток, в котором работает экземпляр
         /// </summary>
-        public Task WorkspaceTask { get; protected set; }
+        public Thread WorkspaceThread { get; protected set; }
         
         public CancellationTokenSource CancellationTokenSource { get; protected set; }
         
+        /// <summary>
+        /// Текущий статус цикла
+        /// </summary>
         public LoopStatus LoopStatus { get; protected set; }
 
+        /// <summary>
+        /// Стоит ли цикл на паузе
+        /// </summary>
         public bool IsPaused { get; protected set; }
+        
+        /// <summary>
+        /// Задержка перед обновлением
+        /// </summary>
+        public int DelayTime {get; set;}
 
         /// <summary>
         /// Запускает работу цикла в отдельную задачу
@@ -35,14 +48,16 @@ namespace Connector.Loops
         {
             LoopManager.Log($"Loop {Id}: запущен");
             // Запускает новую задачу
-            WorkspaceTask = Task.Run(() => Update());
+            
+            WorkspaceThread = new Thread(new ThreadStart(() => Update()));
+            WorkspaceThread.Start();
         }
 
         /// <summary>
         /// Запускает новый проход
         /// </summary>
         /// <returns></returns>
-        protected abstract Task Update();
+        protected abstract void Update();
         
         protected abstract void Dispose();
 
@@ -60,6 +75,14 @@ namespace Connector.Loops
         public void Resume()
         {
             IsPaused = false;
+        }
+
+        /// <summary>
+        /// Останавливает работу потока
+        /// </summary>
+        protected void Sleep()
+        {
+            Thread.Sleep(DelayTime);
         }
 
         /// <summary>

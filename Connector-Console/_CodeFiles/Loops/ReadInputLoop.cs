@@ -27,7 +27,7 @@ namespace Connector.Loops
         /// </summary>
         private event Action<string> OnUpdateEvent = delegate(string f) {  };
 
-        protected override Task Update()
+        protected override void Update()
         {
             LoopStatus = LoopStatus.Running;
 
@@ -35,7 +35,7 @@ namespace Connector.Loops
             while (true)
             {
                 if (CheckCancelationToken())
-                    return WorkspaceTask;
+                    return;
 
                 // Если не стоит пауза
                 if(!IsPaused)
@@ -45,11 +45,10 @@ namespace Connector.Loops
                     // Вызываем обновление
                     OnUpdateEvent(str);
                 }
-
             }
 
             LoopStatus = LoopStatus.Completed;
-            return WorkspaceTask;
+            return;
         }
 
         protected override void Dispose()

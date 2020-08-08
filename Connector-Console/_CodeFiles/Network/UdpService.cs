@@ -67,6 +67,8 @@ namespace Connector.Network
             var endPoint = new IPEndPoint(RecieverIp, RecieverPort);
 
             var bytesCount = recieverClient.Send(bytes, bytes.Length, endPoint);
+            
+            NetworkServiceLogger.Log("Данные отправлены");
 
             return bytesCount;
         }
