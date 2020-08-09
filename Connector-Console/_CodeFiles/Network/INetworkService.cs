@@ -52,12 +52,8 @@ namespace Connector.Network
         /// Также возвращает адрес отправителя.
         /// Может вернуть null.
         /// </summary>
-        byte[] Recieve(ref IPEndPoint ip);
+        void ListenString(Action<string> eventActivator);
 
-        /// <summary>
-        /// Вызывает метод Recieve и возвращает строку.
-        /// </summary>
-        string RecieveString();        
         /// <summary>
         /// Закрывает сервис и останавливает все соединения
         /// </summary>

@@ -9,10 +9,10 @@ namespace Connector.Network
     {
         public UdpService()
         {
-            recieverClient = new UdpClient();
+            senderClient = new UdpClient();
         }
         
-        private UdpClient recieverClient;
+        private UdpClient senderClient;
 
         private UdpClient listenerClient;
 
@@ -27,22 +27,20 @@ namespace Connector.Network
 
         public override int Send(object message)
         {
-
-            if (RecieverIp == null)
+            var endPoint = CreateEndPoint(RecieverIp, RecieverPort);
+            
+            if (endPoint == null)
             {
                 MessageNotSended();
                 return 0;
             }
 
             var str = message.ToString();
-
             var bytes = Encoding.UTF8.GetBytes(str);
 
-            var endPoint = new IPEndPoint(RecieverIp, RecieverPort);
-
-            var bytesCount = recieverClient.Send(bytes, bytes.Length, endPoint);
+            // Отправка
+            var bytesCount = senderClient.Send(bytes, bytes.Length, endPoint);
             
-
             if (!IsFullSended(bytes, bytes.Length))
             {
                 MessageNotFullySended(bytesCount, bytes.Length);
@@ -55,22 +53,29 @@ namespace Connector.Network
             return bytesCount;
         }
 
-        public override byte[] Recieve(ref IPEndPoint ip)
+        public override void ListenString(Action<string> eventActivator)
         {
             if (listenerClient == null)
-                return null;
+                return;
 
-            if (ip.Address == IPAddress.Any)
-                ip = null;
+            // С таким аргументом прослушка будет идти по любому подключению.
+            // Порт был задан ранее.
+            IPEndPoint endPoint = null;
 
-            var bytes = listenerClient.Receive(ref ip);
+            var bytes = listenerClient.Receive(ref endPoint);
 
-            return bytes;
+            var str = Encoding.UTF8.GetString(bytes);
+
+            if (string.IsNullOrEmpty(str) == true)
+                return;
+            
+            // Активируем событие
+            eventActivator(str);
         }
 
         public override void Close()
         {
-            recieverClient?.Close();
+            senderClient?.Close();
             listenerClient?.Close();
 
             NetworkServiceLogger.Log("UDP протокол закрыт");
@@ -80,7 +85,7 @@ namespace Connector.Network
         {
             Close();
             
-            recieverClient?.Dispose();
+            senderClient?.Dispose();
             listenerClient?.Dispose();
         }
     }

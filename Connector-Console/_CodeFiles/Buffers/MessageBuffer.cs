@@ -13,70 +13,43 @@ namespace Connector.Buffers
     /// Класс, представляющий собой буфер
     /// для хранения строковых сообщений
     /// </summary>
-    public class MessageBuffer
+    public class MessageBuffer : IMessageBuffer
     {
-        /// <summary>
-        /// Строка для хранения ID буфера
-        /// </summary>
-        public string Id { get; private set; }
-        /// <summary>
-        /// Список для хранения сообщений
-        /// </summary>
-        public List<string> Messages { get; private set; }
-
-        /// -------------- Конструктор --------------
-        /// <summary>
-        /// Инициализирует Id и список Messages
-        /// </summary>
-        private MessageBuffer()
+        public MessageBuffer()
         {
             Id = "default";
             Messages = new List<string>();
         }
         
-        /// <summary>
-        /// умеет принимать строку для инициализации Id
-        /// </summary>
         /// <param name="id">Идентификатор буфера</param>
-        private MessageBuffer(string id) : this()
+        public MessageBuffer(string id) : this()
         {
             Id = id;
         }
-        /// ---------------------------------------------
-
-        /// -------------- Create() --------------
+        
         /// <summary>
-        /// Создаёт экземпляр MessageBuffer
+        /// Строка для хранения ID буфера
         /// </summary>
-        public static MessageBuffer Create()
-        {
-            return new MessageBuffer();
-        }
+        public string Id { get; private set; }
+        
         /// <summary>
-        /// Умеет принимать строку и передавать её
-        /// конструтору MessageBuffer
+        /// Список для хранения сообщений
         /// </summary>
-        public static MessageBuffer Create(string id)
-        {
-            return new MessageBuffer(id);
-        }
-        /// ---------------------------------------------
+        public List<string> Messages { get; private set; }
 
-        /// -------------- Add() --------------
+        
         /// <summary>
         /// Добавляет строку в конец списка
         /// </summary>
-        public void Add(string newMessage)
+        public virtual void Add(string newMessage)
         {
             Messages.Add(newMessage);
         }
-        /// ---------------------------------------------
-
-        /// -------------- Queue() --------------
+        
         /// <summary>
         /// Возвращает первую строку из списка и удаляет её оттуда
         /// </summary>
-        public string Queue()
+        public virtual string Queue()
         {
             if (Messages.Count == 0)
                 return null;
@@ -85,10 +58,11 @@ namespace Connector.Buffers
             Messages.RemoveAt(0);
             return firstElement;
         }
+        
         /// <summary>
         /// Возвращает n-строку из списка и удаляет её оттуда
         /// </summary>
-        public string Queue(int n)
+        public virtual string Queue(int n)
         {
             if (n < 0 || n >= Messages.Count)
                 return null;
@@ -97,24 +71,23 @@ namespace Connector.Buffers
             Messages.RemoveAt(n);
             return firstElement;
         }
-        /// ---------------------------------------------
 
-        /// -------------- Query() --------------
         /// <summary>
         /// Возвращает перечисление, с помощью которого
         /// можно проходится по всем сообщениям в foreach.
         /// </summary>
-        public IEnumerable Query()
+        public virtual IEnumerable Query()
         {
             for (int i = 0; i < Messages.Count; i++)
             {
                 yield return Messages[i];
             }
         }
+        
         /// <summary>
         /// умеет задавать начальную позицию цикла
         /// </summary>
-        public IEnumerable Query(int start)
+        public virtual IEnumerable Query(int start)
         {
             for (int i = start; i < Messages.Count; i++)
             {
@@ -123,12 +96,12 @@ namespace Connector.Buffers
                 else
                     yield return Messages[i];
             }
-
         }
+        
         /// <summary>
         /// умеет задавать начальную и конечную позиции цикла
         /// </summary>
-        public IEnumerable Query(int start, int end)
+        public virtual IEnumerable Query(int start, int end)
         {
             for (int i = start; i < end; i++)
             {
@@ -138,15 +111,13 @@ namespace Connector.Buffers
                     yield return Messages[i];
             }
         }
-        /// ---------------------------------------------
 
-        /// -------------- QueryQueue() --------------
         /// <summary>
         /// Возвращает перечисление, с помощью которого
         /// можно проходится по всем сообщениям в foreach
         /// и удалять i-ые элементы из списка
         /// </summary>
-        public IEnumerable QueryQueue()
+        public virtual IEnumerable QueryQueue()
         {
             for (int i = 0; i < Messages.Count; i++)
             {
@@ -155,10 +126,11 @@ namespace Connector.Buffers
                 yield return firstElement;
             }
         }
+        
         /// <summary>
         /// умеет задавать начальную позицию цикла
         /// </summary>
-        public IEnumerable QueryQueue(int start)
+        public virtual IEnumerable QueryQueue(int start)
         {
             for (int i = start; i < Messages.Count; i++)
             {
@@ -173,10 +145,11 @@ namespace Connector.Buffers
             }
 
         }
+        
         /// <summary>
         /// умеет задавать начальную и конечную позиции цикла
         /// </summary>
-        public IEnumerable QueryQueue(int start, int end)
+        public virtual IEnumerable QueryQueue(int start, int end)
         {
             for (int i = start; i < end; i++)
             {
@@ -191,9 +164,7 @@ namespace Connector.Buffers
                 }
             }
         }
-        ///---------------------------------------------
 
-        /// -------------- Clear() --------------
         /// <summary>
         /// Удаляет все сообщения в списке
         /// </summary>
@@ -201,7 +172,6 @@ namespace Connector.Buffers
         {
             Messages.Clear();
         }
-        /// ---------------------------------------------
 
     }
 }

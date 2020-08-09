@@ -74,7 +74,7 @@ namespace Connector.ConsoleRealizarions
             var messageBuffer = Toolbox.GetTool<MessageBuffer>();
             if (messageBuffer == null)
             {
-                messageBuffer = MessageBuffer.Create("network_buffer");
+                messageBuffer = new DateMessageBuffer("network_buffer");
                 Toolbox.Add(messageBuffer);
             }
                 

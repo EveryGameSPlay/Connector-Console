@@ -1,10 +1,13 @@
 ﻿using Connector.Network.Wrappers;
 using Connector.Printer;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using Connector.Network.TcpObjects;
 
 namespace Connector.Network
 {
@@ -13,8 +16,6 @@ namespace Connector.Network
 
         public TcpService()
         {
-            recieverClient = new TcpClient();
-
             RecieverIp = IPAddress.Any;
             RecieverPort = -1;
             ListenerPort = -1;
@@ -27,7 +28,7 @@ namespace Connector.Network
             BufferSize = bufferSize;
         }
 
-        private TcpClient recieverClient;
+        private TcpClient senderClient;
 
         private TcpListenerWrapper listenerServer;
 
@@ -39,6 +40,10 @@ namespace Connector.Network
         /// </summary>
         public int BufferSize { get; set; }
 
+        
+        /// <summary>
+        /// Попытка подключения
+        /// </summary>
         private bool TryConnect()
         {
             if (RecieverIp.Equals(IPAddress.Any) == true)
@@ -47,9 +52,26 @@ namespace Connector.Network
             if (RecieverPort < 0)
                 return false;
 
-            if (!recieverClient.Connected)
-                recieverClient.Connect(RecieverIp, RecieverPort);
+            // Если подключен, то закрываем соединение
+            if (senderClient.Connected)
+            {
+                senderClient.Close();
+            }
+            
+            senderClient = new TcpClient();
 
+            var endPoint = CreateEndPoint(RecieverIp, RecieverPort);
+
+            if (endPoint == null)
+                return false;
+            
+            // Подключаемся
+            senderClient.Connect(endPoint);
+
+            // Не подключились
+            if (!senderClient.Connected)
+                return false;
+                
             return true;
         }
 
@@ -72,56 +94,58 @@ namespace Connector.Network
                 return 0;
             }
 
+            var stream = senderClient.GetStream();
+            
+            var bw = new BinaryWriter(stream);
+            
+            
             var str = message.ToString();
-
-            NetworkStream stream = recieverClient.GetStream();
-            byte[] data = Encoding.UTF8.GetBytes(str);
-            stream.Write(data, 0, data.Length);
-
+            // Запись в поток / отправка сообщения
+            bw.Write(str);
+            
+            bw.Close();
+            stream.Close();
+            
             MessageFullySended();
 
-            return data.Length;
+            return Encoding.UTF8.GetByteCount(str);
         }
 
-
-        // TODO: заменить Recieve на Listen и передавать в него активатор события Loop`а.
-        // TODO: для каждого TCP соединения сделать отдельный поток
-        public override byte[] Recieve(ref IPEndPoint ip)
+        public override void ListenString(Action<string> eventActivator)
         {
-
             if (listenerServer == null)
-                return null;
+                return;
 
             if (!listenerServer.Active)
-                return null;
+                return;
 
             try
             {
-                NetworkServiceLogger.Log("Ожидание клиента");
-                TcpClient client = listenerServer.AcceptTcpClient();
-                NetworkServiceLogger.Log("Клиент получен");
-                NetworkStream stream = client.GetStream();
+                // Пока есть ожидающие подключения
+                while (listenerServer.Pending())
+                {
+                    var client = listenerServer.AcceptTcpClient();
 
-                byte[] data = new byte[BufferSize];
-                int bytes = stream.Read(data, 0, data.Length);
-
-                //stream.Close();
-                //client.Close();
-
-                return data.Take(bytes).ToArray();
+                    var clientEntity = new ClientEntity(this, client, eventActivator);
+                    
+                    // Запуск потока с обработкой клиента
+                    var clientThread = new Thread(new ThreadStart(() => clientEntity.Process()));
+                    clientThread.Start();
+                }
+                
             }
             catch(SocketException ex)
             {
                 NetworkServiceLogger.Log("Получение клиентов остановлено извне");
             }
-
-            return null;
+            
+            return;
         }
 
 
         public override void Close()
         {
-            recieverClient?.Close();
+            senderClient?.Close();
             listenerServer?.Stop();
 
             NetworkServiceLogger.Log("TCP протокол закрыт");
@@ -131,7 +155,7 @@ namespace Connector.Network
         {
             Close();
 
-            recieverClient?.Dispose();
+            senderClient?.Dispose();
         }
     }
 }

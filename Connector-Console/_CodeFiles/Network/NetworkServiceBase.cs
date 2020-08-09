@@ -4,7 +4,6 @@ using Gasanov.Extensions.Float;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
 namespace Connector.Network
 {
@@ -20,22 +19,12 @@ namespace Connector.Network
 
         public abstract void Dispose();
 
-        public abstract byte[] Recieve(ref IPEndPoint ip);
+        public abstract void ListenString(Action<string> eventActivator);
 
-        public virtual string RecieveString()
-        {
-            IPEndPoint ip = CreateEndPoint(IPAddress.Any, ListenerPort);
-            if (ip == null)
-                return String.Empty;
-
-            var bytes = Recieve(ref ip);
-
-            if (bytes == null)
-                return String.Empty;
-
-            return Encoding.UTF8.GetString(bytes);
-        }
-
+        /// <summary>
+        /// Создание конечной точки.
+        /// Если один из аргументов неправильный, то вернет null.
+        /// </summary>
         public IPEndPoint CreateEndPoint(IPAddress ip, int port)
         {
             if (ip == null)
@@ -49,22 +38,34 @@ namespace Connector.Network
 
         public abstract int Send(object message);
 
+        /// <summary>
+        /// Уведомляет о неуспешной отправке сообщения
+        /// </summary>
         protected void MessageNotSended()
         {
             NetworkServiceLogger.LogWarning("Сообщение не отправлено.");
         }
 
+        /// <summary>
+        /// Уведомляет о неполной отправке сообщения.
+        /// </summary>
         protected void MessageNotFullySended(int actual, int expected)
         {
             var percent = ((float)actual / (float)expected)*100;
             NetworkServiceLogger.LogWarning($"Сообщение доставлено на {percent.ToString(1)}%");
         }
 
+        /// <summary>
+        /// Уведомляет о полной отправке сообщения.
+        /// </summary>
         protected void MessageFullySended()
         {
             NetworkServiceLogger.LogWarning("Сообщение доставлено полностью.");
         }
 
+        /// <summary>
+        /// Проверка на количество отправленных байт.
+        /// </summary>
         protected bool IsFullSended(byte[] data, int actual)
         {
             if (actual == data.Length)

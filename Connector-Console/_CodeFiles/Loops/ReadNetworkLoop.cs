@@ -39,11 +39,8 @@ namespace Connector.Loops
                     if(netService == null)
                         continue;
                     
-                    var str = netService.RecieveString();
-                    if (String.IsNullOrEmpty(str))
-                        continue;
-
-                    OnUpdateEvent(str);
+                    // Передача события, которые вызовется при получении данных
+                    netService.ListenString((string str) => OnUpdateEvent(str));
                 }
                 
                 Sleep();
