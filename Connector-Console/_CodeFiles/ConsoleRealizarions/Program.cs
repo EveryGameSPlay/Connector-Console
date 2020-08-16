@@ -55,7 +55,7 @@ namespace Connector.ConsoleRealizarions
         private static void InitialzieLoops()
         {
             // Цикл чтения
-            var readInputLoop = ReadInputLoop.Create();
+            var readInputLoop = LoopFactory.Create<ReadInputLoop, string>();
 
             // Получаем обработчик команд и добавляем команду
             var commandHandler = Toolbox.GetTool<CommandHandler>();
@@ -69,7 +69,7 @@ namespace Connector.ConsoleRealizarions
             readInputLoop.Subscribe(commandHandler.Handle);
             
             // Цикл чтения сокетов
-            var readNetworkLoop = ReadNetworkLoop.Create();
+            var readNetworkLoop = LoopFactory.Create<ReadNetworkLoop, string>();
 
             var messageBuffer = Toolbox.GetTool<MessageBuffer>();
             if (messageBuffer == null)

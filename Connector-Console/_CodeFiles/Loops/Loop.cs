@@ -6,7 +6,7 @@ namespace Connector.Loops
 {
     public abstract class Loop : IProgress<LoopStatus>
     {
-        protected Loop()
+         protected Loop()
         {
             LoopStatus = LoopStatus.WaitingForStart;
             IsPaused = false;
@@ -24,7 +24,7 @@ namespace Connector.Loops
         /// </summary>
         public Thread WorkspaceThread { get; protected set; }
         
-        public CancellationTokenSource CancellationTokenSource { get; protected set; }
+        public CancellationTokenSource CancellationTokenSource { get; private set; }
         
         /// <summary>
         /// Текущий статус цикла
@@ -40,7 +40,8 @@ namespace Connector.Loops
         /// Задержка перед обновлением
         /// </summary>
         public int DelayTime {get; set;}
-
+        
+         
         /// <summary>
         /// Запускает работу цикла в отдельную задачу
         /// </summary>
@@ -58,9 +59,13 @@ namespace Connector.Loops
         /// </summary>
         /// <returns></returns>
         protected abstract void Update();
-        
-        protected abstract void Dispose();
 
+        protected virtual void Dispose()
+        {
+            LoopStatus = LoopStatus.Disposed;
+        }
+
+        
         /// <summary>
         /// Ставит цикл на паузу
         /// </summary>
@@ -85,6 +90,7 @@ namespace Connector.Loops
             Thread.Sleep(DelayTime);
         }
 
+        
         /// <summary>
         /// Останавливает цикл и связанный с ним Task
         /// </summary>
@@ -134,6 +140,17 @@ namespace Connector.Loops
         }
 
         /// <summary>
+        /// // Устанавливает новый идентификатор
+        /// </summary>
+        public void SetId(string id)
+        {
+            if(Id != null || Id != String.Empty)
+                LoopManager.LogWarning($"Loop {Id}: был изменен идентификатор на {id}");
+            
+            Id = id;
+        }
+
+        /// <summary>
         /// Вывод текущего статуса
         /// </summary>
         public void Report(LoopStatus value)
@@ -141,7 +158,6 @@ namespace Connector.Loops
             LoopManager.Log(value);
         }
 
-         
     }
 
     public enum LoopStatus
@@ -150,6 +166,7 @@ namespace Connector.Loops
         WaitingForStart = 0,
         Canceled = 3,
         Faulted = 4,
+        Disposed = 5,
         Completed = 2
     }
 }
