@@ -13,7 +13,7 @@ namespace Connector.Loops
             where T: LoopGeneric<TU>, new()
             where TU: class
         {
-            return Create<T, TU>("read_input_loop");
+            return Create<T, TU>("generic_input_loop");
         }
 
         // <summary>
