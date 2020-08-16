@@ -22,10 +22,6 @@ namespace Connector.Network.Wrappers
 
         }
 
-        public new bool Active
-        {
-            get { return base.Active; }
-        }
-
+        public new bool Active => base.Active;
     }
 }

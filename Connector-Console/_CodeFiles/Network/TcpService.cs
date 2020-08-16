@@ -1,6 +1,8 @@
 ﻿using Connector.Network.Wrappers;
 using Connector.Printer;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,9 +15,11 @@ namespace Connector.Network
 {
     public class TcpService : NetworkServiceBase
     {
-
         public TcpService()
         {
+            clients = new List<ClientEntity>();
+            _rwLock = new ReadWriteWrap();
+            
             RecieverIp = IPAddress.Any;
             RecieverPort = -1;
             ListenerPort = -1;
@@ -28,11 +32,13 @@ namespace Connector.Network
             BufferSize = bufferSize;
         }
 
-        private TcpClient senderClient;
+        private TcpClient _senderClient;
 
-        private TcpListenerWrapper listenerServer;
+        private TcpListenerWrapper _listenerServer;
 
+        private List<ClientEntity> clients;
 
+        private ReadWriteWrap _rwLock;
 
         /// <summary>
         /// Размер буфера получаемых сообщений.
@@ -53,12 +59,12 @@ namespace Connector.Network
                 return false;
 
             // Если подключен, то закрываем соединение
-            if (senderClient.Connected)
+            if (_senderClient.Connected)
             {
-                senderClient.Close();
+                _senderClient.Close();
             }
             
-            senderClient = new TcpClient();
+            _senderClient = new TcpClient();
 
             var endPoint = CreateEndPoint(RecieverIp, RecieverPort);
 
@@ -66,10 +72,10 @@ namespace Connector.Network
                 return false;
             
             // Подключаемся
-            senderClient.Connect(endPoint);
+            _senderClient.Connect(endPoint);
 
             // Не подключились
-            if (!senderClient.Connected)
+            if (!_senderClient.Connected)
                 return false;
                 
             return true;
@@ -79,10 +85,10 @@ namespace Connector.Network
         {
             ListenerPort = port;
 
-            listenerServer = new TcpListenerWrapper(IPAddress.Any, port);
+            _listenerServer = new TcpListenerWrapper(IPAddress.Any, port);
             NetworkServiceLogger.Log($"Порт прослушивания {ListenerPort} установлен");
 
-            listenerServer.Start();
+            _listenerServer.Start();
             NetworkServiceLogger.Log("Прослушивание началось");
         }
 
@@ -94,7 +100,7 @@ namespace Connector.Network
                 return 0;
             }
 
-            var stream = senderClient.GetStream();
+            var stream = _senderClient.GetStream();
             
             var bw = new BinaryWriter(stream);
             
@@ -113,40 +119,85 @@ namespace Connector.Network
 
         public override void ListenString(Action<string> eventActivator)
         {
-            if (listenerServer == null)
+            if (_listenerServer == null)
                 return;
 
-            if (!listenerServer.Active)
+            if (!_listenerServer.Active)
                 return;
 
             try
             {
                 // Пока есть ожидающие подключения
-                while (listenerServer.Pending())
+                while (_listenerServer.Pending())
                 {
-                    var client = listenerServer.AcceptTcpClient();
+                    var client = _listenerServer.AcceptTcpClient();
 
                     var clientEntity = new ClientEntity(this, client, eventActivator);
+                    clientEntity.OnProcessComplete += (x) => RemoveClient(x);
+                    clients.Add(clientEntity);
                     
                     // Запуск потока с обработкой клиента
                     var clientThread = new Thread(new ThreadStart(() => clientEntity.Process()));
+                    clientEntity.SetThreadReference(clientThread);
                     clientThread.Start();
                 }
                 
             }
             catch(SocketException ex)
             {
-                NetworkServiceLogger.Log("Получение клиентов остановлено извне");
+                NetworkServiceLogger.Log($"Получение клиентов остановлено извне {ex.ErrorCode}");
             }
             
             return;
         }
 
+        /// <summary>
+        /// Потокобезопасное удаление клиента из списка
+        /// </summary>
+        /// <param name="client"></param>
+        public void RemoveClient(ClientEntity client)
+        {
+            // Остальные потоки будут ожидать
+            using (_rwLock.WriteLock())
+            {
+                clients.Remove(client);
+            }
+        }
+
+        /// <summary>
+        /// Потокобезопасное удаление из списка клиентов.
+        /// Остановка потоков не производится.
+        /// </summary>
+        public void RemoveAllClients()
+        {
+            using (_rwLock.WriteLock())
+            {
+                for (var i = 0; i < clients.Count;i++)
+                {
+                    clients.Remove(clients[i]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Потокобезопасная остановка всех потоков обработки клиентов
+        /// </summary>
+        public void AbortAllClients()
+        {
+            using (_rwLock.ReadLock())
+            {
+                for (var i = 0; i < clients.Count;i++)
+                {
+                    clients[i].AbortProcessThread();
+                }
+            }
+        }
+
 
         public override void Close()
         {
-            senderClient?.Close();
-            listenerServer?.Stop();
+            _senderClient?.Close();
+            _listenerServer?.Stop();
 
             NetworkServiceLogger.Log("TCP протокол закрыт");
         }
@@ -155,7 +206,7 @@ namespace Connector.Network
         {
             Close();
 
-            senderClient?.Dispose();
+            _senderClient?.Dispose();
         }
     }
 }

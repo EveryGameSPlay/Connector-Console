@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Connector.Network.TcpObjects
 {
@@ -14,8 +15,7 @@ namespace Connector.Network.TcpObjects
         /// Событие при получении данных
         /// </summary>
         private readonly Action<string> _eventActivator;
-        
-        
+
         /// <param name="eventActivator">Событие при получении данных</param>
         public ClientEntity(TcpService _service, TcpClient tcpClient, Action<string> eventActivator)
         {
@@ -24,28 +24,66 @@ namespace Connector.Network.TcpObjects
         }
 
         /// <summary>
+        /// Вызывается при завершении обработки
+        /// </summary>
+        public event Action<ClientEntity> OnProcessComplete;
+        
+        private Thread _workspaceThread;
+
+        /// <summary>
         /// Обработка клиента
         /// </summary>
         public void Process()
         {
-            if (!_client.Connected)
-                return;
+            if (_workspaceThread == null)
+                _workspaceThread = Thread.CurrentThread;
             
-            var stream = _client.GetStream();
-            
-            var br = new BinaryReader(stream);
+            try
+            {
+                if (!_client.Connected)
+                    return;
 
-            // Чтение строки
-            var str = br.ReadString();
+                var stream = _client.GetStream();
 
-            br.Close();
-            stream.Close();
-            _client.Close();
+                var br = new BinaryReader(stream);
 
-            if (string.IsNullOrEmpty(str) == true)
-                return;
+                // Чтение строки
+                var str = br.ReadString();
 
-            _eventActivator(str);
+                br.Close();
+                stream.Close();
+                _client.Close();
+
+                if (string.IsNullOrEmpty(str) == true)
+                    return;
+
+                _eventActivator(str);
+                OnProcessComplete(this);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                NetworkServiceLogger.LogWarning($"Клиент был закрыт извне.");
+            }
+            catch(ThreadAbortException abortException)
+            {
+                NetworkServiceLogger.LogWarning($"Обработка клиента была завершена извне!");
+            }
+        }
+
+        /// <summary>
+        /// Убивает поток, в котором выполняется задача
+        /// </summary>
+        public void AbortProcessThread()
+        {
+            _workspaceThread.Abort();
+        }
+
+        /// <summary>
+        /// Устанавливает ссылку на поток, в котором будет происходить обработка
+        /// </summary>
+        public void SetThreadReference(Thread thread)
+        {
+            _workspaceThread = thread;
         }
     }
 }
