@@ -8,11 +8,7 @@ namespace Connector.ConsoleRealizarions.Displays
 
     public class ConsoleColoredDisplay : IDisplay
     {
-
         private static readonly Dictionary<Color, ConsoleColor> _colors;
-
-        private Color _previousColor;
-        private Color _previousColorBack;
 
         static ConsoleColoredDisplay()
         {
@@ -42,8 +38,10 @@ namespace Connector.ConsoleRealizarions.Displays
 
             return ConsoleColor.Gray;
         }
-
-
+        
+        private Color _previousColor;
+        private Color _previousColorBack;
+        
         /// <summary>
         /// Выводит сообщение в консоль
         /// </summary>
@@ -60,9 +58,6 @@ namespace Connector.ConsoleRealizarions.Displays
         /// <param name="color"></param>
         public void ShowMessage(object message, Color color)
         {
-            // if (_previousColor != color)
-            //     Console.WriteLine();
-
             _previousColor = color;
 
             Console.ForegroundColor = GetConsoledColor(color);

@@ -8,13 +8,23 @@ namespace Connector.Network.TcpObjects
     /// </summary>
     public class ReadWriteWrap
     {
+        /// <summary>
+        /// Блокировщик потоков.
+        /// Слим версия сначала работает некоторое время в цикле, а после уходит в спящий режим.
+        /// </summary>
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
     
+        /// <summary>
+        /// Встать в очередь на чтение.
+        /// </summary>
         public ReadLockToken ReadLock()
         {
             return new ReadLockToken(_lockSlim);
         }
 
+        /// <summary>
+        /// Встать в очередь на запись.
+        /// </summary>
         public WriteLockToken WriteLock()
         {
             return new WriteLockToken(_lockSlim);

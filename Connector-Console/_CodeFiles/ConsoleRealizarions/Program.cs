@@ -39,10 +39,11 @@ namespace Connector.ConsoleRealizarions
         }
 
         /// <summary>
-        /// Функция инициализации программных компонентов
+        /// Инициализация компонентов первого порядка.
         /// </summary>
         private static void Initialize()
         {
+            // Обработчик вывода информации.
             var display = new ConsoleColoredDisplay();
             Print.SetDisplay(display);
             
@@ -50,35 +51,22 @@ namespace Connector.ConsoleRealizarions
         }
 
         /// <summary>
-        /// Инициализирует циклы
+        /// Инициализация компонентов второго порядка.
         /// </summary>
         private static void InitialzieLoops()
         {
-            // Цикл чтения
+            // Создание цикла чтения ввода информации от пользователя.
             var readInputLoop = LoopFactory.Create<ReadInputLoop, string>();
 
-            // Получаем обработчик команд и добавляем команду
+            // Получаем обработчик команд и подписываем его на ввод пользователя.
             var commandHandler = Toolbox.GetTool<CommandHandler>();
-            commandHandler.Add(new Command("cancel", (string[] args) =>
-            {
-                readInputLoop.Cancel();
-            }));
-
-            commandHandler.Add(new Command("go_fuck", (string[] args) => { Print.Log("Я работаю");  }));
-
             readInputLoop.Subscribe(commandHandler.Handle);
             
-            // Цикл чтения сокетов
+            // Создание цикла чтения информации с соединения.
             var readNetworkLoop = LoopFactory.Create<ReadNetworkLoop, string>();
-
+            
+            // Получения буфера для хранения входящих сообщений.
             var messageBuffer = Toolbox.GetTool<MessageBuffer>();
-            if (messageBuffer == null)
-            {
-                messageBuffer = new DateMessageBuffer("network_buffer");
-                Toolbox.Add(messageBuffer);
-            }
-                
-
             readNetworkLoop.Subscribe((string str) => messageBuffer.Add(str));
         }
         
@@ -89,6 +77,14 @@ namespace Connector.ConsoleRealizarions
         {
             var commandHandler = new CommandHandler();
             SetupCommands(commandHandler);
+            
+            // Создание буфера для хранения входящих сообщений.
+            var messageBuffer = Toolbox.GetTool<MessageBuffer>();
+            if (messageBuffer == null)
+            {
+                messageBuffer = new DateMessageBuffer("network_buffer");
+                Toolbox.Add(messageBuffer);
+            }
             
             Toolbox.Add(commandHandler);
             Toolbox.Add(new ConsoleInputHandler());
