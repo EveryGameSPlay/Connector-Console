@@ -60,8 +60,8 @@ namespace Connector.ConsoleRealizarions.Displays
         /// <param name="color"></param>
         public void ShowMessage(object message, Color color)
         {
-            if (_previousColor != color)
-                Console.WriteLine();
+            // if (_previousColor != color)
+            //     Console.WriteLine();
 
             _previousColor = color;
 

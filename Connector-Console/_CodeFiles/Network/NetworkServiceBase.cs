@@ -94,6 +94,9 @@ namespace Connector.Network
 
         public virtual void SetRecieverPort(int port)
         {
+            if(port == -1)
+                return;
+            
             RecieverPort = port;
 
             NetworkServiceLogger.Log($"Порт получателя {RecieverPort} установлен");

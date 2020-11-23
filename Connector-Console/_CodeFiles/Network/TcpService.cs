@@ -57,9 +57,9 @@ namespace Connector.Network
 
             if (RecieverPort < 0)
                 return false;
-
+            
             // Если подключен, то закрываем соединение
-            if (_senderClient.Connected)
+            if (_senderClient != null &&_senderClient.Connected)
             {
                 _senderClient.Close();
             }
@@ -70,9 +70,16 @@ namespace Connector.Network
 
             if (endPoint == null)
                 return false;
-            
-            // Подключаемся
-            _senderClient.Connect(endPoint);
+
+            try
+            {
+                // Подключаемся
+                _senderClient.Connect(endPoint);
+            }
+            catch (Exception e)
+            {
+                Print.LogWarning($"Конечная точка не имеет получателя. IP: {RecieverIp}, Port: {RecieverPort}");
+            }
 
             // Не подключились
             if (!_senderClient.Connected)

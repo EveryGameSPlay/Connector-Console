@@ -136,6 +136,7 @@ namespace Connector.ConsoleRealizarions
                             break;
                         
                         case "tcp":
+                            Print.Log("Установлен протокол TCP", Color.DarkBlue);
                             var tcpService = new TcpService();
                             tcpService.SetRecieverInfo(recieverIp.ToString(), recieverPort);
 
@@ -143,7 +144,6 @@ namespace Connector.ConsoleRealizarions
                                 tcpService.SetListenerPort(listenerPort);
 
                             Toolbox.Add(tcpService);
-                            Print.Log("Установлен протокол TCP", Color.DarkBlue);
                             break;
                         
                         default:
@@ -277,6 +277,9 @@ namespace Connector.ConsoleRealizarions
                     Print.Log(str,Color.Blue);
                 }
             }));
+            
+            commandHandler.Handle("set_reciever_port : 7777");
+            commandHandler.Handle("set_listener_port : 7777");
         }
     }
 
